@@ -55,8 +55,8 @@ export type GameAction =
 
 export const initialState: GameState = {
   players: [
-    { id: 1, name: 'Player 1', totalScore: 0 },
-    { id: 2, name: 'Player 2', totalScore: 0 }
+    { id: 1, name: 'You', totalScore: 0 },
+    { id: 2, name: 'AI Opponent', totalScore: 0 }
   ],
   currentPlayerId: 1,
   turnScore: 0,

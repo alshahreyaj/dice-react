@@ -1,0 +1,139 @@
+.dice-icon {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(145deg, #ffffff, #e6e6e6);
+  border-radius: 12px;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.dice-face {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.dice-dot {
+  width: 10px;
+  height: 10px;
+  background: #1a1a1a;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  position: absolute;
+}
+
+/* Dot positions */
+.dice-dot.center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.dice-dot.top-left {
+  top: 15%;
+  left: 15%;
+}
+
+.dice-dot.top-right {
+  top: 15%;
+  right: 15%;
+}
+
+.dice-dot.middle-left {
+  top: 50%;
+  left: 15%;
+  transform: translateY(-50%);
+}
+
+.dice-dot.middle-right {
+  top: 50%;
+  right: 15%;
+  transform: translateY(-50%);
+}
+
+.dice-dot.bottom-left {
+  bottom: 15%;
+  left: 15%;
+}
+
+.dice-dot.bottom-right {
+  bottom: 15%;
+  right: 15%;
+}
+
+/* Dice states */
+.dice-selectable {
+  cursor: pointer;
+}
+
+.dice-selectable:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 
+    0 8px 16px rgba(99, 102, 241, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.dice-selected {
+  background: linear-gradient(145deg, #818cf8, #6366f1);
+  border-color: #4f46e5;
+  transform: translateY(-6px) scale(1.08);
+  box-shadow: 
+    0 12px 24px rgba(99, 102, 241, 0.5),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.dice-selected .dice-dot {
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.dice-banked {
+  opacity: 0.35;
+  background: linear-gradient(145deg, #9ca3af, #6b7280);
+  transform: scale(0.85);
+  cursor: not-allowed;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.dice-banked .dice-dot {
+  background: #4b5563;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 
+      0 12px 24px rgba(99, 102, 241, 0.5),
+      inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 12px 32px rgba(99, 102, 241, 0.7),
+      inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes roll-animation {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.dice-rolling {
+  animation: roll-animation 0.5s ease-in-out;
+}

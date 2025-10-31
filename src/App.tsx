@@ -3,6 +3,8 @@ import './App.css'
 import { gameReducer, initialState } from './game/gameState'
 import type { Combo } from './game/scoring'
 import { scoreRoll } from './game/scoring'
+import { DiceIcon } from './components/DiceIcon'
+import { makeAIDecision, getAIThinkingDelay } from './game/aiPlayer'
 
 function App() {
   const [gameState, dispatch] = useReducer(gameReducer, initialState)
@@ -26,11 +28,51 @@ function App() {
     turnHistory
   } = gameState
   
-  // Debug: Log when player changes
+  // AI Player Logic - Execute AI moves automatically
   useEffect(() => {
-    console.log('Current player changed to:', currentPlayerId);
-    console.log('Current game state:', gameState);
-  }, [currentPlayerId, gameState])
+    const isAITurn = currentPlayerId === 2 && gameStarted && !gameOver
+    
+    if (!isAITurn || !currentScore) {
+      setAiIsThinking(false)
+      return
+    }
+    
+    console.log('AI turn detected, making decision...')
+    setAiIsThinking(true)
+    
+    const aiDecision = makeAIDecision(gameState)
+    
+    if (!aiDecision) {
+      console.log('AI has no valid moves')
+      setAiIsThinking(false)
+      return
+    }
+    
+    // Add delay to make AI moves feel more natural
+    const delay = getAIThinkingDelay()
+    
+    const timeoutId = setTimeout(() => {
+      console.log('AI decision:', aiDecision)
+      
+      // Select the dice
+      dispatch({ type: 'SELECT_DICE', indices: aiDecision.diceIndices })
+      
+      // Execute the action after a longer delay to show selection
+      setTimeout(() => {
+        if (aiDecision.action === 'bank') {
+          dispatch({ type: 'BANK_SELECTED' })
+        } else {
+          dispatch({ type: 'SCORE_AND_PASS' })
+        }
+        setAiIsThinking(false)
+      }, 800)
+    }, delay)
+    
+    return () => {
+      clearTimeout(timeoutId)
+      setAiIsThinking(false)
+    }
+  }, [currentPlayerId, gameStarted, gameOver, currentScore, gameState])
   
   // State to track potential score from current selection
   const [potentialScore, setPotentialScore] = useState<number>(0)
@@ -39,6 +81,7 @@ function App() {
   const [showRules, setShowRules] = useState<boolean>(false)
   const [showLeftPanel, setShowLeftPanel] = useState<boolean>(true)
   const [showRightPanel, setShowRightPanel] = useState<boolean>(true)
+  const [aiIsThinking, setAiIsThinking] = useState<boolean>(false)
   
   // Layout: requested percentages
   // 1) both show: 20 / 60 / 20
@@ -127,6 +170,12 @@ function App() {
     console.log(`Clicked die ${index} (value: ${turnDice[index]})`);
     console.log('Current banked dice indices:', bankedDiceIndices);
     console.log('Is die banked:', bankedDiceIndices.includes(index));
+    
+    // Prevent interaction during AI's turn
+    if (currentPlayerId === 2 || aiIsThinking) {
+      console.log('Cannot select: AI is playing');
+      return;
+    }
     
     // Only allow selection if we have a current score, the game isn't over,
     // and the die is in remainingDiceIndices (which means it's not banked)
@@ -334,7 +383,7 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-inner">
-          <h1>Dice Game</h1>
+          <h1>🎲 DICE MASTERS 🎲</h1>
         </div>
       </header>
       
@@ -408,12 +457,14 @@ function App() {
           </div>
 
           {/* Game status message */}
-          <div className="message">{message}</div>
+          <div className="message">
+            {aiIsThinking ? '🤔 AI is thinking...' : message}
+          </div>
           {/* Game not started overlay */}
           {!gameStarted && !gameOver && (
             <div className="game-start">
-              <h2>Dice Game</h2>
-              <p>First player to reach 5000 points wins!</p>
+              <h2>🎲 DICE MASTERS 🎲</h2>
+              <p>Challenge the AI! First to reach 5000 points wins!</p>
               <button onClick={onStartGame} className="start-game-btn">Start Game</button>
             </div>
           )}
@@ -431,33 +482,20 @@ function App() {
         {/* Dice display */}
         <div className="dice-row">
           {turnDice.map((value, index) => {
-            // Determine the classes for this die
             const isSelected = isDieSelected(index);
             const isInRemaining = remainingDiceIndices.includes(index);
-            const isBanked = !isInRemaining; // If it's not in remaining indices, it's banked
+            const isBanked = !isInRemaining;
             const isSelectable = isDieSelectable(index);
             
-            // Get available combos for debugging
-            const availableCombos = currentScore ? getAvailableCombos(currentScore.combos) : [];
-            const isPartOfAvailableCombo = availableCombos.some(combo => combo.indices.includes(index));
-            
-            // Log the status of each die for debugging
-            console.log(`Die ${index} (value: ${value}) - Selected: ${isSelected}, In Remaining: ${isInRemaining}, Banked: ${isBanked}, Part of available combo: ${isPartOfAvailableCombo}, Selectable: ${isSelectable}`);
-            
             return (
-              <div 
-                key={index} 
-                className={`die 
-                  ${isSelected ? 'die-selected' : ''} 
-                  ${isBanked ? 'die-banked' : ''} 
-                  ${!isBanked ? 'die-selectable' : ''}`
-                }
-                onClick={() => !isBanked ? handleDiceClick(index) : null}
-              >
-                {value}
-                {isBanked && <span className="banked-indicator">✓</span>}
-                {isInRemaining && <span className="die-index">{index}</span>}
-              </div>
+              <DiceIcon
+                key={index}
+                value={value}
+                isSelected={isSelected}
+                isBanked={isBanked}
+                isSelectable={isSelectable}
+                onClick={() => handleDiceClick(index)}
+              />
             );
           })}
         </div>
@@ -468,7 +506,7 @@ function App() {
           <button 
             onClick={onBankSelected} 
             className="bank-btn"
-            disabled={!isSelectionValid || gameOver || !gameStarted}
+            disabled={!isSelectionValid || gameOver || !gameStarted || aiIsThinking || currentPlayerId === 2}
           >
             Bank & Continue {potentialScore > 0 ? `(+${potentialScore})` : ''}
           </button>
@@ -477,7 +515,7 @@ function App() {
           <button 
             onClick={onScoreAndPass} 
             className="pass-btn"
-            disabled={!isSelectionValid || gameOver || !gameStarted}
+            disabled={!isSelectionValid || gameOver || !gameStarted || aiIsThinking || currentPlayerId === 2}
           >
             Score & Pass {potentialScore > 0 ? `(+${potentialScore})` : ''}
           </button>
