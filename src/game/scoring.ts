@@ -21,12 +21,6 @@ export type ScoreResult = {
 // - Dice cannot be reused across combos. We choose the best non-overlapping set of combos (maximize total score).
 // - We do not implement jokers yet.
 
-function countByFace(dice: number[]) {
-  const counts = new Map<number, number>();
-  dice.forEach((v) => counts.set(v, (counts.get(v) ?? 0) + 1));
-  return counts;
-}
-
 function indicesByFace(dice: number[]) {
   const map = new Map<number, number[]>();
   dice.forEach((v, i) => {

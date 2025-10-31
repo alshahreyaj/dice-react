@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import './DiceIcon.css'
 
 interface DiceIconProps {
@@ -18,7 +19,7 @@ export function DiceIcon({
   className = ''
 }: DiceIconProps) {
   const renderDots = () => {
-    const dots: JSX.Element[] = []
+    const dots: ReactNode[] = []
     
     // Define dot positions for each face
     const dotPositions: Record<number, string[]> = {
